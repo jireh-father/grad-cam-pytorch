@@ -28,7 +28,8 @@ from grad_cam import (
 
 # if a model includes LSTM, such as in image captioning,
 # torch.backends.cudnn.enabled = False
-
+import glob
+import os
 
 def get_device(cuda):
     cuda = cuda and torch.cuda.is_available()
@@ -120,7 +121,7 @@ def main(ctx):
 
 
 @main.command()
-@click.option("-i", "--image-paths", type=str, multiple=True, required=True)
+@click.option("-i", "--image-paths", type=str, required=True)
 @click.option("-a", "--arch", type=click.Choice(model_names), required=True)
 @click.option("-t", "--target-layer", type=str, required=True)
 @click.option("-k", "--topk", type=int, default=3)
@@ -142,6 +143,7 @@ def demo1(image_paths, target_layer, arch, topk, output_dir, cuda):
     model.eval()
 
     # Images
+    image_paths = glob.glob(os.path.join(image_paths, "*"))
     images, raw_images = load_images(image_paths)
     images = torch.stack(images).to(device)
 
