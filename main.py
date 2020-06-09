@@ -142,9 +142,11 @@ def main(ctx):
 @click.option("-k", "--topk", type=int, default=3)
 @click.option("-m", "--model_path", type=str, default=None)
 @click.option("-s", "--input_size", type=int, default=560)
+@click.option("-n", "--num_classes", type=int, default=3)
+@click.option("-p", "--pretrained", type=bool, default=True)
 @click.option("-o", "--output-dir", type=str, default="./results")
 @click.option("--cuda/--cpu", default=True)
-def demo1(image_paths, target_layer, arch, topk, model_path, input_size, output_dir, cuda):
+def demo1(image_paths, target_layer, arch, topk, model_path, input_size, num_classes, pretrained, output_dir, cuda):
     """
     Visualize model responses given multiple images
     """
@@ -155,7 +157,7 @@ def demo1(image_paths, target_layer, arch, topk, model_path, input_size, output_
     classes = get_classtable()
 
     # Model from torchvision
-    model = models.__dict__[arch](pretrained=True)
+    model = models.__dict__[arch](pretrained=pretrained, num_classes=num_classes)
     model = load_checkpoint(model_path, model)
     model.to(device)
     model.eval()
