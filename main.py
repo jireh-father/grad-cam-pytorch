@@ -187,6 +187,7 @@ def demo1(image_paths, target_layer, arch, topk, model_path, input_size, num_cla
 
     for image_idx, image_paths in enumerate(image_paths_list):
         images, raw_images = load_images(image_paths, input_size)
+        image_file_names = [os.path.splitext(os.path.basename(fn))[0] for fn in image_paths]
         images = torch.stack(images).to(device)
 
         """
@@ -213,7 +214,7 @@ def demo1(image_paths, target_layer, arch, topk, model_path, input_size, num_cla
                 save_gradient(
                     filename=osp.join(
                         output_dir,
-                        "{}-{}-{}-vanilla-{}.png".format(image_idx, j, arch, classes[ids[j, i]]),
+                        "{}-{}-{}-{}-vanilla-{}.png".format(image_file_names[image_idx], image_idx, j, arch, classes[ids[j, i]]),
                     ),
                     gradient=gradients[j],
                 )
@@ -236,7 +237,7 @@ def demo1(image_paths, target_layer, arch, topk, model_path, input_size, num_cla
                 save_gradient(
                     filename=osp.join(
                         output_dir,
-                        "{}-{}-{}-deconvnet-{}.png".format(image_idx, j, arch, classes[ids[j, i]]),
+                        "{}-{}-{}-{}-deconvnet-{}.png".format(image_file_names[image_idx], image_idx, j, arch, classes[ids[j, i]]),
                     ),
                     gradient=gradients[j],
                 )
@@ -266,7 +267,7 @@ def demo1(image_paths, target_layer, arch, topk, model_path, input_size, num_cla
                 save_gradient(
                     filename=osp.join(
                         output_dir,
-                        "{}={}-{}-guided-{}.png".format(image_idx, j, arch, classes[ids[j, i]]),
+                        "{}-{}={}-{}-guided-{}.png".format(image_file_names[image_idx], image_idx, j, arch, classes[ids[j, i]]),
                     ),
                     gradient=gradients[j],
                 )
@@ -275,8 +276,8 @@ def demo1(image_paths, target_layer, arch, topk, model_path, input_size, num_cla
                 save_gradcam(
                     filename=osp.join(
                         output_dir,
-                        "{}-{}-{}-gradcam-{}-{}.png".format(
-                            image_idx, j, arch, target_layer, classes[ids[j, i]]
+                        "{}-{}-{}-{}-gradcam-{}-{}.png".format(
+                            image_file_names[image_idx], image_idx, j, arch, target_layer, classes[ids[j, i]]
                         ),
                     ),
                     gcam=regions[j, 0],
@@ -287,8 +288,8 @@ def demo1(image_paths, target_layer, arch, topk, model_path, input_size, num_cla
                 save_gradient(
                     filename=osp.join(
                         output_dir,
-                        "{}-{}-{}-guided_gradcam-{}-{}.png".format(
-                            image_idx, j, arch, target_layer, classes[ids[j, i]]
+                        "{}-{}-{}-{}-guided_gradcam-{}-{}.png".format(
+                            image_file_names[image_idx], image_idx, j, arch, target_layer, classes[ids[j, i]]
                         ),
                     ),
                     gradient=torch.mul(regions, gradients)[j],
