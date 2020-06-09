@@ -161,6 +161,7 @@ def demo1(image_paths, target_layer, arch, topk, model_path, input_size, num_cla
     """
     Visualize model responses given multiple images
     """
+    os.makedirs(output_dir, exist_ok=True)
 
     device = get_device(cuda)
 
