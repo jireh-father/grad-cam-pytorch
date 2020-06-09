@@ -291,7 +291,13 @@ def demo1(image_paths, target_layer, arch, topk, model_path, input_size, num_cla
                     gradient=torch.mul(regions, gradients)[j],
                 )
 
-
+        del images
+        del probs
+        del ids
+        del bp
+        del deconv
+        del gcam
+        del gbp
 @main.command()
 @click.option("-i", "--image-paths", type=str, multiple=True, required=True)
 @click.option("-o", "--output-dir", type=str, default="./results")
