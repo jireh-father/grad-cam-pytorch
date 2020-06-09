@@ -42,13 +42,13 @@ def get_device(cuda):
     return device
 
 
-def load_images(image_paths):
+def load_images(image_paths, input_size):
     images = []
     raw_images = []
     print("Images:")
     for i, image_path in enumerate(image_paths):
         print("\t#{}: {}".format(i, image_path))
-        image, raw_image = preprocess(image_path)
+        image, raw_image = preprocess(image_path, input_size)
         images.append(image)
         raw_images.append(raw_image)
     return images, raw_images
@@ -64,9 +64,9 @@ def get_classtable():
     return classes
 
 
-def preprocess(image_path):
+def preprocess(image_path, input_size):
     raw_image = cv2.imread(image_path)
-    raw_image = cv2.resize(raw_image, (224,) * 2)
+    raw_image = cv2.resize(raw_image, (input_size,) * 2)
     image = transforms.Compose(
         [
             transforms.ToTensor(),
@@ -141,9 +141,10 @@ def main(ctx):
 @click.option("-t", "--target-layer", type=str, required=True)
 @click.option("-k", "--topk", type=int, default=3)
 @click.option("-m", "--model_path", type=str, default=None)
+@click.option("-s", "--input_size", type=int, default=560)
 @click.option("-o", "--output-dir", type=str, default="./results")
 @click.option("--cuda/--cpu", default=True)
-def demo1(image_paths, target_layer, arch, topk, model_path, output_dir, cuda):
+def demo1(image_paths, target_layer, arch, topk, model_path, input_size, output_dir, cuda):
     """
     Visualize model responses given multiple images
     """
@@ -161,7 +162,7 @@ def demo1(image_paths, target_layer, arch, topk, model_path, output_dir, cuda):
 
     # Images
     image_paths = glob.glob(os.path.join(image_paths, "*"))
-    images, raw_images = load_images(image_paths)
+    images, raw_images = load_images(image_paths, input_size)
     images = torch.stack(images).to(device)
 
     """
