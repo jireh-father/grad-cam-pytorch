@@ -9,7 +9,7 @@ from __future__ import print_function
 
 import copy
 import os.path as osp
-
+import json
 import click
 import cv2
 import matplotlib.cm as cm
@@ -155,9 +155,10 @@ def main(ctx):
 @click.option("-b", "--batch_size", type=int, default=10)
 @click.option("-p", "--pretrained", type=bool, default=True)
 @click.option("-o", "--output-dir", type=str, default="./results")
+@click.option("-c", "--classes_json", type=str, default='["normal", "warning", "disease"]')
 @click.option("--cuda/--cpu", default=True)
 def demo1(image_paths, target_layer, arch, topk, model_path, input_size, num_classes, batch_size, pretrained,
-          output_dir, cuda):
+          output_dir, classes_json, cuda):
     """
     Visualize model responses given multiple images
     """
@@ -166,8 +167,8 @@ def demo1(image_paths, target_layer, arch, topk, model_path, input_size, num_cla
     device = get_device(cuda)
 
     # Synset words
-    classes = get_classtable()
-
+    # classes = get_classtable()
+    classes = json.loads(classes_json)
     # Model from torchvision
     model = models.__dict__[arch](pretrained=pretrained, num_classes=num_classes)
     model, _, _, _ = load_checkpoint(model_path, model)
