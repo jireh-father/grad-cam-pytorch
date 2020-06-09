@@ -105,6 +105,21 @@ def save_sensitivity(filename, maps):
     maps = cv2.resize(maps, (224, 224), interpolation=cv2.INTER_NEAREST)
     cv2.imwrite(filename, maps)
 
+def load_checkpoint(checkpoint_path, model, use_gpu=True):
+    assert os.path.isfile(checkpoint_path)
+    print("Loading checkpoint '{}'".format(checkpoint_path))
+    if use_gpu:
+        checkpoint_dict = torch.load(checkpoint_path)
+    else:
+        checkpoint_dict = torch.load(checkpoint_path, map_location='cpu')
+    pretrained_dict = checkpoint_dict['state_dict']
+    model.load_state_dict(pretrained_dict)
+    optimizer_state = checkpoint_dict['optimizer']
+    learning_rate = checkpoint_dict['learning_rate']
+    iteration = checkpoint_dict['iteration']
+    print("Loaded checkpoint '{}' from iteration {}".format(
+        checkpoint_path, iteration))
+    return model, optimizer_state, learning_rate, iteration
 
 # torchvision models
 model_names = sorted(
@@ -125,9 +140,10 @@ def main(ctx):
 @click.option("-a", "--arch", type=click.Choice(model_names), required=True)
 @click.option("-t", "--target-layer", type=str, required=True)
 @click.option("-k", "--topk", type=int, default=3)
+@click.option("-m", "--model_path", type=str, default=None)
 @click.option("-o", "--output-dir", type=str, default="./results")
 @click.option("--cuda/--cpu", default=True)
-def demo1(image_paths, target_layer, arch, topk, output_dir, cuda):
+def demo1(image_paths, target_layer, arch, topk, model_path, output_dir, cuda):
     """
     Visualize model responses given multiple images
     """
@@ -139,6 +155,7 @@ def demo1(image_paths, target_layer, arch, topk, output_dir, cuda):
 
     # Model from torchvision
     model = models.__dict__[arch](pretrained=True)
+    model = load_checkpoint(model_path, model)
     model.to(device)
     model.eval()
 
