@@ -178,6 +178,11 @@ def demo1(image_paths, target_layer, arch, topk, model_path, input_size, num_cla
 
     image_paths_list = chunks(image_paths, batch_size)
 
+    gcam = GradCAM(model=model)
+    gbp = GuidedBackPropagation(model=model)
+    bp = BackPropagation(model=model)
+    deconv = Deconvnet(model=model)
+
     for image_paths in image_paths_list:
         images, raw_images = load_images(image_paths, input_size)
         images = torch.stack(images).to(device)
@@ -193,7 +198,6 @@ def demo1(image_paths, target_layer, arch, topk, model_path, input_size, num_cla
         # =========================================================================
         print("Vanilla Backpropagation:")
 
-        bp = BackPropagation(model=model)
         probs, ids = bp.forward(images)  # sorted
 
         for i in range(topk):
@@ -218,7 +222,6 @@ def demo1(image_paths, target_layer, arch, topk, model_path, input_size, num_cla
         # =========================================================================
         print("Deconvolution:")
 
-        deconv = Deconvnet(model=model)
         _ = deconv.forward(images)
 
         for i in range(topk):
@@ -241,10 +244,8 @@ def demo1(image_paths, target_layer, arch, topk, model_path, input_size, num_cla
         # =========================================================================
         print("Grad-CAM/Guided Backpropagation/Guided Grad-CAM:")
 
-        gcam = GradCAM(model=model)
         _ = gcam.forward(images)
 
-        gbp = GuidedBackPropagation(model=model)
         _ = gbp.forward(images)
 
         for i in range(topk):
@@ -294,10 +295,6 @@ def demo1(image_paths, target_layer, arch, topk, model_path, input_size, num_cla
         del images
         del probs
         del ids
-        del bp
-        del deconv
-        del gcam
-        del gbp
 @main.command()
 @click.option("-i", "--image-paths", type=str, multiple=True, required=True)
 @click.option("-o", "--output-dir", type=str, default="./results")
