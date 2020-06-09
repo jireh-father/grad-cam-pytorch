@@ -152,7 +152,7 @@ def main(ctx):
 @click.option("-m", "--model_path", type=str, default=None)
 @click.option("-s", "--input_size", type=int, default=560)
 @click.option("-n", "--num_classes", type=int, default=3)
-@click.option("-n", "--batch_size", type=int, default=10)
+@click.option("-b", "--batch_size", type=int, default=10)
 @click.option("-p", "--pretrained", type=bool, default=True)
 @click.option("-o", "--output-dir", type=str, default="./results")
 @click.option("--cuda/--cpu", default=True)
