@@ -45,13 +45,13 @@ def get_device(cuda):
     return device
 
 
-def load_images(image_paths, input_size):
+def load_images(image_paths, input_size, use_crop):
     images = []
     raw_images = []
     print("Images:")
     for i, image_path in enumerate(image_paths):
         print("\t#{}: {}".format(i, image_path))
-        image, raw_image = preprocess(image_path, input_size)
+        image, raw_image = preprocess(image_path, input_size, use_crop)
         images.append(image)
         raw_images.append(raw_image)
     return images, raw_images
@@ -169,11 +169,12 @@ def main(ctx):
 @click.option("-n", "--num_classes", type=int, default=3)
 @click.option("-b", "--batch_size", type=int, default=10)
 @click.option("-p", "--pretrained", type=bool, default=True)
+@click.option("-p", "--use_crop", type=bool, default=True)
 @click.option("-o", "--output-dir", type=str, default="./results")
 @click.option("-c", "--classes_json", type=str, default='["normal", "warning", "disease"]')
 @click.option("--cuda/--cpu", default=True)
 def demo1(image_paths, target_layer, arch, topk, model_path, input_size, num_classes, batch_size, pretrained,
-          output_dir, classes_json, cuda):
+          use_crop, output_dir, classes_json, cuda):
     """
     Visualize model responses given multiple images
     """
@@ -201,7 +202,7 @@ def demo1(image_paths, target_layer, arch, topk, model_path, input_size, num_cla
     deconv = Deconvnet(model=model)
 
     for image_idx, image_paths in enumerate(image_paths_list):
-        images, raw_images = load_images(image_paths, input_size)
+        images, raw_images = load_images(image_paths, input_size, use_crop)
         image_file_names = [os.path.splitext(os.path.basename(fn))[0] for fn in image_paths]
         images = torch.stack(images).to(device)
 
