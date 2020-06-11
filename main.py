@@ -82,7 +82,7 @@ def preprocess(image_path, input_size, use_crop):
     raw_image = np.array(im)
     image = transform(image=raw_image)['image']
     # raw_image = cv2.imread(image_path)
-    # raw_image = cv2.resize(raw_image, (input_size,) * 2)
+    raw_image = cv2.resize(raw_image, (input_size,) * 2)
     # image = transforms.Compose(
     #     [
     #         transforms.ToTensor(),
