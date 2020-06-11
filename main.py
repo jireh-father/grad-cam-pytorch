@@ -169,7 +169,7 @@ def main(ctx):
 @click.option("-n", "--num_classes", type=int, default=3)
 @click.option("-b", "--batch_size", type=int, default=10)
 @click.option("-p", "--pretrained", type=bool, default=True)
-@click.option("-p", "--use_crop", type=bool, default=True)
+@click.option("-u", "--use_crop", type=bool, default=True)
 @click.option("-o", "--output-dir", type=str, default="./results")
 @click.option("-c", "--classes_json", type=str, default='["normal", "warning", "disease"]')
 @click.option("--cuda/--cpu", default=True)
