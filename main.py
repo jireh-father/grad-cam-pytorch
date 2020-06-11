@@ -75,7 +75,7 @@ def preprocess(image_path, input_size, use_crop):
         resize = [al.Resize(input_size, input_size)]
     transform = al.Compose(resize + [
         al.Normalize(),
-        # ToTensorV2()
+        ToTensorV2()
     ])
 
     im = Image.open(image_path).convert("RGB")
