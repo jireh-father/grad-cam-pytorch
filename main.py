@@ -16,8 +16,10 @@ import matplotlib.cm as cm
 import numpy as np
 import torch
 import torch.nn.functional as F
-from torchvision import models, transforms
-
+from torchvision import models
+import albumentations as al
+from albumentations.pytorch import ToTensorV2
+from PIL import Image
 from grad_cam import (
     BackPropagation,
     Deconvnet,
@@ -65,15 +67,28 @@ def get_classtable():
     return classes
 
 
-def preprocess(image_path, input_size):
-    raw_image = cv2.imread(image_path)
-    raw_image = cv2.resize(raw_image, (input_size,) * 2)
-    image = transforms.Compose(
-        [
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-        ]
-    )(raw_image[..., ::-1].copy())
+def preprocess(image_path, input_size, use_crop):
+    if use_crop:
+        resize = [al.Resize(int(input_size * 1.1), int(input_size * 1.1)),
+                  al.CenterCrop(height=input_size, width=input_size)]
+    else:
+        resize = [al.Resize(input_size, input_size)]
+    transform = al.Compose(resize + [
+        al.Normalize(),
+        ToTensorV2()
+    ])
+
+    im = Image.open(image_path).convert("RGB")
+    raw_image = np.array(im)
+    image = transform(image=raw_image)['image']
+    # raw_image = cv2.imread(image_path)
+    # raw_image = cv2.resize(raw_image, (input_size,) * 2)
+    # image = transforms.Compose(
+    #     [
+    #         transforms.ToTensor(),
+    #         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+    #     ]
+    # )(raw_image[..., ::-1].copy())
     return image, raw_image
 
 
@@ -214,7 +229,8 @@ def demo1(image_paths, target_layer, arch, topk, model_path, input_size, num_cla
                 save_gradient(
                     filename=osp.join(
                         output_dir,
-                        "{}-{}-{}-{}-vanilla-{}.png".format(image_file_names[j], image_idx, j, arch, classes[ids[j, i]]),
+                        "{}-{}-{}-{}-vanilla-{}.png".format(image_file_names[j], image_idx, j, arch,
+                                                            classes[ids[j, i]]),
                     ),
                     gradient=gradients[j],
                 )
@@ -237,7 +253,8 @@ def demo1(image_paths, target_layer, arch, topk, model_path, input_size, num_cla
                 save_gradient(
                     filename=osp.join(
                         output_dir,
-                        "{}-{}-{}-{}-deconvnet-{}.png".format(image_file_names[j], image_idx, j, arch, classes[ids[j, i]]),
+                        "{}-{}-{}-{}-deconvnet-{}.png".format(image_file_names[j], image_idx, j, arch,
+                                                              classes[ids[j, i]]),
                     ),
                     gradient=gradients[j],
                 )
@@ -298,6 +315,8 @@ def demo1(image_paths, target_layer, arch, topk, model_path, input_size, num_cla
         del images
         del probs
         del ids
+
+
 @main.command()
 @click.option("-i", "--image-paths", type=str, multiple=True, required=True)
 @click.option("-o", "--output-dir", type=str, default="./results")
