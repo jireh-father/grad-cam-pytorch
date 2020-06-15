@@ -187,7 +187,8 @@ def demo1(image_paths, target_layer, arch, topk, model_path, input_size, num_cla
     classes = json.loads(classes_json)
     # Model from torchvision
     model = models.__dict__[arch](pretrained=pretrained, num_classes=num_classes)
-    model, _, _, _ = load_checkpoint(model_path, model)
+    if model_path:
+        model, _, _, _ = load_checkpoint(model_path, model)
     model.to(device)
     model.eval()
 
