@@ -327,7 +327,7 @@ def demo1(image_paths, target_layer, arch, topk, model_path, input_size, num_cla
                     bg_im = Image.new("RGBA", (concat_w, concat_h + 80), (0, 0, 0, 255))
                     bg_im.paste(concat_im, (0, 80))
                     d = ImageDraw.Draw(bg_im)
-                    d.text((5, 1), "label: {}, pred: {}".format(real_labels, classes[ids[j, i]]), fill='white')
+                    d.text((5, 1), "label: {}, pred: {}".format(real_labels[path_idx], classes[ids[j, i]]), fill='white')
                     bg_im.save(os.path.join(output_dir, "{}-{}-{}-{}-{}.png".format(
                         image_file_names[j], image_idx, j, arch, classes[ids[j, i]]
                     )), format="png")
