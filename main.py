@@ -328,8 +328,8 @@ def demo1(image_paths, target_layer, arch, topk, model_path, input_size, num_cla
                     bg_im.paste(concat_im, (0, 80))
                     d = ImageDraw.Draw(bg_im)
                     d.text((5, 1), "label: {}, pred: {}".format(real_labels[path_idx], classes[ids[j, i]]), fill='white')
-                    bg_im.save(os.path.join(output_dir, "{}-{}-{}-{}-{}.png".format(
-                        image_file_names[j], image_idx, j, arch, classes[ids[j, i]]
+                    bg_im.save(os.path.join(output_dir, "{}-{}-{}-{}-label_{}-pred_{}.png".format(
+                        image_file_names[j], image_idx, j, arch, real_labels[path_idx], classes[ids[j, i]]
                     )), format="png")
                     os.unlink(grad_cam_path)
                     os.unlink(guided_grad_cam_path)
