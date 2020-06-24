@@ -161,7 +161,7 @@ def main(ctx):
 
 @main.command()
 @click.option("-i", "--image-paths", type=str, required=True)
-@click.option("-a", "--arch", type=click.Choice(model_names), required=True)
+@click.option("-a", "--arch", type=str, required=True)
 @click.option("-t", "--target-layer", type=str, required=True)
 @click.option("-k", "--topk", type=int, default=3)
 @click.option("-m", "--model_path", type=str, default=None)
