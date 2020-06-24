@@ -202,15 +202,14 @@ def demo1(image_paths, target_layer, arch, topk, model_path, input_size, num_cla
     # Images
     image_path_list = image_paths.split(",")
     real_labels = image_path_labels.split(",")
+    gcam = GradCAM(model=model)
+    gbp = GuidedBackPropagation(model=model)
+    bp = BackPropagation(model=model)
+    print("go")
     for path_idx, image_paths in enumerate(image_path_list):
         image_paths = glob.glob(os.path.join(image_paths, "*"))
 
         image_paths_list = chunks(image_paths, batch_size)
-        print(1)
-        gcam = GradCAM(model=model)
-        gbp = GuidedBackPropagation(model=model)
-        bp = BackPropagation(model=model)
-        print(2)
         # deconv = Deconvnet(model=model)
 
         for image_idx, image_paths in enumerate(image_paths_list):
