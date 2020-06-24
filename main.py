@@ -212,6 +212,7 @@ def demo1(image_paths, target_layer, arch, topk, model_path, input_size, num_cla
         # deconv = Deconvnet(model=model)
         print(image_paths_list)
         for image_idx, image_paths in enumerate(image_paths_list):
+            print(image_idx)
             images, raw_images = load_images(image_paths, input_size, use_crop)
             image_file_names = [os.path.splitext(os.path.basename(fn))[0] for fn in image_paths]
             images = torch.stack(images).to(device)
