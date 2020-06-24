@@ -27,7 +27,7 @@ from grad_cam import (
     GuidedBackPropagation,
     occlusion_sensitivity,
 )
-
+from efficientnet_pytorch import EfficientNet
 # if a model includes LSTM, such as in image captioning,
 # torch.backends.cudnn.enabled = False
 import glob
@@ -187,7 +187,13 @@ def demo1(image_paths, target_layer, arch, topk, model_path, input_size, num_cla
     # classes = get_classtable()
     classes = json.loads(classes_json)
     # Model from torchvision
-    model = models.__dict__[arch](pretrained=pretrained, num_classes=num_classes)
+
+    if arch.startswith("efficientnet"):
+        # efficientnet-b1 > MemoryEfficientSwish-391
+        model = EfficientNet.from_pretrained(arch, num_classes=num_classes)
+    else:
+        model = models.__dict__[arch](pretrained=pretrained, num_classes=num_classes)
+
     if model_path:
         model, _, _, _ = load_checkpoint(model_path, model)
     model.to(device)
