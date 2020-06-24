@@ -132,7 +132,6 @@ class GradCAM(_BaseWrapper):
                 self.handlers.append(module.register_backward_hook(save_grads(name)))
 
     def _find(self, pool, target_layer):
-        print(list(pool.keys()))
         if target_layer in pool.keys():
             return pool[target_layer]
         else:
