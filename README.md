@@ -50,11 +50,13 @@ For instance, off-the-shelf `inception_v3` cannot cut off negative gradients dur
 Generate all kinds of visualization maps given a torchvision model, a target layer, and images.
 
 ```bash
-python main.py demo1 -a wide_resnet101_2 -t layer4 \
-                     -i [your_image_directory] \
-                     -m [yout_trained_model_path(option)] -s [input_image_size(560)] -n [nums of classes(3)] \
-                     -p False -k 1 -b [batch_size(2)] -o [your_output_dir]
-```
+python3 main.py demo1 -a efficientnet-b1 -t _blocks.22 \
+-i [dataset_root]/test/0,[dataset_root]/test/1,[dataset_root]/test/2,[dataset_root]/test/3 \
+-m [모델경로] \
+-o [출력 디렉토리] \
+-s 224 -n 4 -p False -k 1 -b 2 \
+-c '["normal", "warning", "chronic", "deep"]' -z normal,warning,chronic,deep
+
 
 |              Predicted class               |                       #1 boxer                        |                       #2 bull mastiff                        |                       #3 tiger cat                        |
 | :----------------------------------------: | :---------------------------------------------------: | :----------------------------------------------------------: | :-------------------------------------------------------: |
