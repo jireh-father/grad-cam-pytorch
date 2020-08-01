@@ -474,11 +474,7 @@ def demo1(image_paths, target_layer, arch, topk, model_path, input_size, num_cla
 
                     grad_cam_im = Image.open(grad_cam_path)
                     guided_grad_cam_im = Image.open(guided_grad_cam_path)
-                    grad_cam_bbox_im = Image.open(grad_cam_bbox_path)
-                    print(raw_images[j].shape)
-                    print(np.array(grad_cam_im).shape)
-                    print(np.array(guided_grad_cam_im).shape)
-                    print(np.array(grad_cam_bbox_im).shape)
+                    grad_cam_bbox_im = Image.open(grad_cam_bbox_path).convert("RGB")
 
                     im_h = cv2.hconcat([raw_images[j], np.array(grad_cam_im), np.array(guided_grad_cam_im),
                                         np.array(grad_cam_bbox_im)])
