@@ -210,6 +210,7 @@ def save_gcam_bboxes(filename, gcam, raw_image, bitmap_threshold=0.4, bbox_thres
 
     vis_one_image_custom(raw_image, filename, result_bboxes)
 
+
 def vis_one_image_custom(
         im, filename, boxes, dpi=200):
     """Visual debugging of detections."""
@@ -246,6 +247,7 @@ def vis_one_image_custom(
     fig.savefig(filename, dpi=dpi,
                 format='png')
     plt.close('all')
+
 
 def save_sensitivity(filename, maps):
     maps = maps.cpu().numpy()
@@ -473,8 +475,9 @@ def demo1(image_paths, target_layer, arch, topk, model_path, input_size, num_cla
                     grad_cam_im = Image.open(grad_cam_path)
                     guided_grad_cam_im = Image.open(guided_grad_cam_path)
                     grad_cam_bbox_im = Image.open(grad_cam_bbox_path)
-                    print(grad_cam_im.size, guided_grad_cam_im.size, grad_cam_bbox_im.size)
-                    im_h = cv2.hconcat([raw_images[j], np.array(grad_cam_im), np.array(guided_grad_cam_im), np.array(grad_cam_bbox_im)])
+                    print(raw_images[j].shape)
+                    im_h = cv2.hconcat([raw_images[j], np.array(grad_cam_im), np.array(guided_grad_cam_im),
+                                        np.array(grad_cam_bbox_im)])
                     concat_im = Image.fromarray(im_h)
                     concat_w, concat_h = concat_im.size
                     bg_im = Image.new("RGBA", (concat_w, concat_h + 80), (0, 0, 0, 255))
