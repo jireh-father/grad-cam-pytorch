@@ -102,7 +102,11 @@ def save_gradient(filename, gradient):
 
 def save_gradcam(filename, gcam, raw_image, paper_cmap=False):
     gcam = gcam.cpu().numpy()
+    print("gcam", gcam.shape)
+    print(np.unique(gcam))
     cmap = cm.jet_r(gcam)[..., :3] * 255.0
+    print("cmap", cmap.shape)
+    print(np.unique(cmap))
     if paper_cmap:
         alpha = gcam[..., None]
         gcam = alpha * cmap + (1 - alpha) * raw_image
