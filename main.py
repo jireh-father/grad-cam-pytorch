@@ -208,26 +208,28 @@ def save_gcam_bboxes(filename, gcam, raw_image, bitmap_threshold=0.4, bbox_thres
         tmp_box = [_filter_coord(lt_x), _filter_coord(lt_y), _filter_coord(rt_x), _filter_coord(lb_y)]
         result_bboxes.append(tmp_box)
 
+    if not result_bboxes:
+        return False
     vis_one_image_custom(raw_image, filename, result_bboxes)
+    return True
 
 
 def vis_one_image_custom(
         im, filename, boxes, dpi=200):
     """Visual debugging of detections."""
+    if not boxes:
+        return
     fig = plt.figure(frameon=False)
     fig.set_size_inches(im.shape[1] / dpi, im.shape[0] / dpi)
     ax = plt.Axes(fig, [0., 0., 1., 1.])
     ax.axis('off')
     fig.add_axes(ax)
     ax.imshow(im)
+
     boxes = np.array(boxes)
-    print(boxes.shape)
-    if boxes is None:
-        sorted_inds = []  # avoid crash when 'boxes' is None
-    else:
-        # Display in largest to smallest order to reduce occlusion
-        areas = (boxes[:, 2] - boxes[:, 0]) * (boxes[:, 3] - boxes[:, 1])
-        sorted_inds = np.argsort(-areas)
+    # Display in largest to smallest order to reduce occlusion
+    areas = (boxes[:, 2] - boxes[:, 0]) * (boxes[:, 3] - boxes[:, 1])
+    sorted_inds = np.argsort(-areas)
     for i in sorted_inds:
         bbox = boxes[i, :4]
         # show box (off by default)
@@ -457,7 +459,7 @@ def demo1(image_paths, target_layer, arch, topk, model_path, input_size, num_cla
                         "{}-{}-{}-{}-gradcam_bbox-{}-{}.png".format(
                             image_file_names[j], image_idx, j, arch, target_layer, classes[ids[j, i]]
                         ))
-                    save_gcam_bboxes(filename=grad_cam_bbox_path,
+                    gcam_bbox_ret = save_gcam_bboxes(filename=grad_cam_bbox_path,
                                      gcam=regions[j, 0],
                                      raw_image=raw_images[j],
                                      bitmap_threshold=bitmap_threshold, bbox_threshold=bbox_threshold)
@@ -475,10 +477,13 @@ def demo1(image_paths, target_layer, arch, topk, model_path, input_size, num_cla
 
                     grad_cam_im = Image.open(grad_cam_path)
                     guided_grad_cam_im = Image.open(guided_grad_cam_path)
-                    grad_cam_bbox_im = Image.open(grad_cam_bbox_path).convert("RGB")
+                    if gcam_bbox_ret:
+                        grad_cam_bbox_im = Image.open(grad_cam_bbox_path).convert("RGB")
 
-                    im_h = cv2.hconcat([raw_images[j], np.array(grad_cam_im), np.array(guided_grad_cam_im),
-                                        np.array(grad_cam_bbox_im)])
+                        im_h = cv2.hconcat([raw_images[j], np.array(grad_cam_im), np.array(guided_grad_cam_im),
+                                            np.array(grad_cam_bbox_im)])
+                    else:
+                        im_h = cv2.hconcat([raw_images[j], np.array(grad_cam_im), np.array(guided_grad_cam_im)])
                     concat_im = Image.fromarray(im_h)
                     concat_w, concat_h = concat_im.size
                     bg_im = Image.new("RGBA", (concat_w, concat_h + 80), (0, 0, 0, 255))
@@ -491,7 +496,8 @@ def demo1(image_paths, target_layer, arch, topk, model_path, input_size, num_cla
                     )), format="png")
                     os.unlink(grad_cam_path)
                     os.unlink(guided_grad_cam_path)
-                    os.unlink(grad_cam_bbox_path)
+                    if gcam_bbox_ret:
+                        os.unlink(grad_cam_bbox_path)
                     # cv2.imwrite(output_dir + list_name[i], im_h)
 
             del images
