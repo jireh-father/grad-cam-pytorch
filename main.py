@@ -440,9 +440,10 @@ def demo1(image_paths, target_layer, arch, topk, model_path, input_size, num_cla
                     #     ),
                     #     gradient=gradients[j],
                     # )
-
+                    tmp_output_dir = os.path.join(output_dir, real_labels[path_idx])
+                    os.makedirs(tmp_output_dir, exist_ok=True)
                     grad_cam_path = osp.join(
-                        output_dir,
+                        tmp_output_dir,
                         "{}-{}-{}-{}-gradcam-{}-{}.png".format(
                             image_file_names[j], image_idx, j, arch, target_layer, classes[ids[j, i]]
                         ))
@@ -455,7 +456,7 @@ def demo1(image_paths, target_layer, arch, topk, model_path, input_size, num_cla
                     )
 
                     grad_cam_bbox_path = osp.join(
-                        output_dir,
+                        tmp_output_dir,
                         "{}-{}-{}-{}-gradcam_bbox-{}-{}.png".format(
                             image_file_names[j], image_idx, j, arch, target_layer, classes[ids[j, i]]
                         ))
@@ -465,7 +466,7 @@ def demo1(image_paths, target_layer, arch, topk, model_path, input_size, num_cla
                                      bitmap_threshold=bitmap_threshold, bbox_threshold=bbox_threshold)
 
                     guided_grad_cam_path = osp.join(
-                        output_dir,
+                        tmp_output_dir,
                         "{}-{}-{}-{}-guided_gradcam-{}-{}.png".format(
                             image_file_names[j], image_idx, j, arch, target_layer, classes[ids[j, i]]
                         ))
@@ -491,7 +492,7 @@ def demo1(image_paths, target_layer, arch, topk, model_path, input_size, num_cla
                     d = ImageDraw.Draw(bg_im)
                     d.text((5, 1), "label: {}, pred: {}".format(real_labels[path_idx], classes[ids[j, i]]),
                            fill='white')
-                    bg_im.save(os.path.join(output_dir, "{}-{}-{}-{}-label_{}-pred_{}.png".format(
+                    bg_im.save(os.path.join(tmp_output_dir, "{}-{}-{}-{}-label_{}-pred_{}.png".format(
                         image_file_names[j], image_idx, j, arch, real_labels[path_idx], classes[ids[j, i]]
                     )), format="png")
                     os.unlink(grad_cam_path)
