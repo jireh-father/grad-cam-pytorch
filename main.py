@@ -221,6 +221,7 @@ def vis_one_image_custom(
     fig.add_axes(ax)
     ax.imshow(im)
     boxes = np.array(boxes)
+    print(boxes.shape)
     if boxes is None:
         sorted_inds = []  # avoid crash when 'boxes' is None
     else:
