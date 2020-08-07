@@ -440,7 +440,8 @@ def demo1(image_paths, target_layer, arch, topk, model_path, input_size, num_cla
                     #     ),
                     #     gradient=gradients[j],
                     # )
-                    tmp_output_dir = os.path.join(output_dir, real_labels[path_idx])
+                    tmp_output_dir = os.path.join(output_dir, "label_{}-pred_{}".format(
+                        real_labels[path_idx], classes[ids[j, i]]))
                     os.makedirs(tmp_output_dir, exist_ok=True)
                     grad_cam_path = osp.join(
                         tmp_output_dir,
@@ -461,9 +462,9 @@ def demo1(image_paths, target_layer, arch, topk, model_path, input_size, num_cla
                             image_file_names[j], image_idx, j, arch, target_layer, classes[ids[j, i]]
                         ))
                     gcam_bbox_ret = save_gcam_bboxes(filename=grad_cam_bbox_path,
-                                     gcam=regions[j, 0],
-                                     raw_image=raw_images[j],
-                                     bitmap_threshold=bitmap_threshold, bbox_threshold=bbox_threshold)
+                                                     gcam=regions[j, 0],
+                                                     raw_image=raw_images[j],
+                                                     bitmap_threshold=bitmap_threshold, bbox_threshold=bbox_threshold)
 
                     guided_grad_cam_path = osp.join(
                         tmp_output_dir,
