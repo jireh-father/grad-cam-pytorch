@@ -34,7 +34,7 @@ import glob
 import os
 import math
 import matplotlib.pyplot as plt
-
+import rexnet
 
 def get_device(cuda):
     cuda = cuda and torch.cuda.is_available()
@@ -334,6 +334,8 @@ def demo1(image_paths, target_layer, arch, topk, model_path, input_size, num_cla
     if arch.startswith("efficientnet"):
         # efficientnet-b1 > MemoryEfficientSwish-391
         model = EfficientNet.from_pretrained(arch, num_classes=num_classes)
+    elif arch == "rexnet":
+        model = rexnet.ReXNetV1(width_mult=1.3, classes=num_classes)
     else:
         model = models.__dict__[arch](pretrained=pretrained, num_classes=num_classes)
 
