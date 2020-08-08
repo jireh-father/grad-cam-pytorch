@@ -370,8 +370,10 @@ def demo1(image_paths, target_layer, arch, topk, model_path, input_size, num_cla
             # =========================================================================
             # print("Vanilla Backpropagation:")
 
-            probs, ids = bp.forward(images)  # sorted
-
+            try:
+                probs, ids = bp.forward(images)  # sorted
+            except:
+                continue
             # for i in range(topk):
             #     bp.backward(ids=ids[:, [i]])
             #     gradients = bp.generate()
