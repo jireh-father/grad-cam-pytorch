@@ -310,7 +310,7 @@ def main(ctx):
 @click.option("-s", "--input_size", type=int, default=560)
 @click.option("-n", "--num_classes", type=int, default=3)
 @click.option("-b", "--batch_size", type=int, default=10)
-@click.option("-p", "--pretrained", type=bool, default=True)
+@click.option("-p", "--pretrained", type=bool, default=False)
 @click.option("-u", "--use_crop", type=bool, default=True)
 @click.option("-o", "--output-dir", type=str, default="./results")
 @click.option("-c", "--classes_json", type=str, default='["normal", "warning", "disease"]')
