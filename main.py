@@ -310,7 +310,6 @@ def main(ctx):
 @click.option("-s", "--input_size", type=int, default=560)
 @click.option("-n", "--num_classes", type=int, default=3)
 @click.option("-b", "--batch_size", type=int, default=10)
-@click.option("-p", "--pretrained", type=bool, default=False)
 @click.option("-u", "--use_crop", type=bool, default=True)
 @click.option("-o", "--output-dir", type=str, default="./results")
 @click.option("-c", "--classes_json", type=str, default='["normal", "warning", "disease"]')
@@ -318,7 +317,7 @@ def main(ctx):
 @click.option("--cuda/--cpu", default=True)
 @click.option("--bbox_threshold", type=float, default=0.7)
 @click.option("--bitmap_threshold", type=float, default=0.4)
-def demo1(image_paths, target_layer, arch, topk, model_path, input_size, num_classes, batch_size, pretrained,
+def demo1(image_paths, target_layer, arch, topk, model_path, input_size, num_classes, batch_size,
           use_crop, output_dir, classes_json, image_path_labels, cuda, bitmap_threshold, bbox_threshold):
     """
     Visualize model responses given multiple images
@@ -338,9 +337,9 @@ def demo1(image_paths, target_layer, arch, topk, model_path, input_size, num_cla
     elif arch == "rexnet":
         model = rexnet.ReXNetV1(width_mult=1.3, classes=num_classes)
     elif arch == "bagnet":
-        model = bagnets.pytorchnet.bagnet17(pretrained=pretrained)
+        model = bagnets.pytorchnet.bagnet17(pretrained=False)
     else:
-        model = models.__dict__[arch](pretrained=pretrained, num_classes=num_classes)
+        model = models.__dict__[arch](pretrained=False, num_classes=num_classes)
 
     if model_path:
         model, _, _, _ = load_checkpoint(model_path, model)
