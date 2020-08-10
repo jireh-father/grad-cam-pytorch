@@ -35,6 +35,7 @@ import os
 import math
 import matplotlib.pyplot as plt
 import rexnet
+import bagnets.pytorchnet
 
 def get_device(cuda):
     cuda = cuda and torch.cuda.is_available()
@@ -336,6 +337,8 @@ def demo1(image_paths, target_layer, arch, topk, model_path, input_size, num_cla
         model = EfficientNet.from_pretrained(arch, num_classes=num_classes)
     elif arch == "rexnet":
         model = rexnet.ReXNetV1(width_mult=1.3, classes=num_classes)
+    elif arch == "bagnet":
+        model = bagnets.pytorchnet.bagnet17(pretrained=pretrained)
     else:
         model = models.__dict__[arch](pretrained=pretrained, num_classes=num_classes)
 
