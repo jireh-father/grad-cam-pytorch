@@ -337,7 +337,7 @@ def demo1(image_paths, target_layer, arch, topk, model_path, input_size, num_cla
     elif arch == "rexnet":
         model = rexnet.ReXNetV1(width_mult=1.3, classes=num_classes)
     elif arch == "bagnet":
-        model = bagnets.pytorchnet.bagnet17(pretrained=False)
+        model = bagnets.pytorchnet.bagnet17(pretrained=False, num_classes=num_classes)
     else:
         model = models.__dict__[arch](pretrained=False, num_classes=num_classes)
 
