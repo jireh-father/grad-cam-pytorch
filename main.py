@@ -558,7 +558,6 @@ def demo4(image_paths, target_layer, arch, topk, model_path, input_size, num_cla
 
     # Images
     image_path_list = image_paths.split(",")
-    real_labels = classes
     gcam = GradCAM(model=model)
     gbp = GuidedBackPropagation(model=model)
     bp = BackPropagation(model=model)
@@ -614,8 +613,7 @@ def demo4(image_paths, target_layer, arch, topk, model_path, input_size, num_cla
                     #     ),
                     #     gradient=gradients[j],
                     # )
-                    tmp_output_dir = os.path.join(output_dir, "label_{}-pred_{}".format(
-                        real_labels[path_idx], classes[ids[j, i]]))
+                    tmp_output_dir = os.path.join(output_dir, "pred_{}".format(classes[ids[j, i]]))
                     os.makedirs(tmp_output_dir, exist_ok=True)
                     grad_cam_path = osp.join(
                         tmp_output_dir,
@@ -665,10 +663,10 @@ def demo4(image_paths, target_layer, arch, topk, model_path, input_size, num_cla
                     bg_im = Image.new("RGBA", (concat_w, concat_h + 80), (0, 0, 0, 255))
                     bg_im.paste(concat_im, (0, 80))
                     d = ImageDraw.Draw(bg_im)
-                    d.text((5, 1), "label: {}, pred: {}".format(real_labels[path_idx], classes[ids[j, i]]),
+                    d.text((5, 1), "pred: {}".format(classes[ids[j, i]]),
                            fill='white')
-                    bg_im.save(os.path.join(tmp_output_dir, "{}-{}-{}-{}-label_{}-pred_{}.png".format(
-                        image_file_names[j], image_idx, j, arch, real_labels[path_idx], classes[ids[j, i]]
+                    bg_im.save(os.path.join(tmp_output_dir, "{}-{}-{}-{}-pred_{}.png".format(
+                        image_file_names[j], image_idx, j, arch, classes[ids[j, i]]
                     )), format="png")
                     os.unlink(grad_cam_path)
                     os.unlink(guided_grad_cam_path)
