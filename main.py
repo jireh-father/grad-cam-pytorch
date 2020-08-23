@@ -37,6 +37,7 @@ import matplotlib.pyplot as plt
 import rexnet
 import bagnets.pytorchnet
 
+
 def get_device(cuda):
     cuda = cuda and torch.cuda.is_available()
     device = torch.device("cuda" if cuda else "cpu")
@@ -566,43 +567,56 @@ def demo4(image_paths, target_layer, arch, topk, model_path, input_size, num_cla
         image_paths_list = chunks(image_paths, batch_size)
         # deconv = Deconvnet(model=model)
         for image_idx, image_paths in enumerate(image_paths_list):
-            images, raw_images = load_images(image_paths, input_size, use_crop)
-            image_file_names = [os.path.splitext(os.path.basename(fn))[0] for fn in image_paths]
-            images = torch.stack(images).to(device)
+            for image_path in image_paths:
+                transform = al.Compose([
+                    al.SmallestMaxSize(input_size),
+                    al.Normalize(),
+                    ToTensorV2()
+                ])
+                transform2 = al.Compose([
+                    al.SmallestMaxSize(input_size),
+                ])
 
-            """
-            Common usage:
-            1. Wrap your model with visualization classes defined in grad_cam.py
-            2. Run forward() with images
-            3. Run backward() with a list of specific classes
-            4. Run generate() to export results
-            """
+                im = Image.open(image_path).convert("RGB")
+                raw_image = np.array(im)
+                image = transform(image=raw_image)['image']
+                raw_image = transform2(image=raw_image)['image']
 
-            # =========================================================================
-            # print("Vanilla Backpropagation:")
+                image = torch.unsqueeze(image, 0).to(device)
 
-            try:
-                probs, ids = bp.forward(images)  # sorted
-            except:
-                continue
+                """
+                Common usage:
+                1. Wrap your model with visualization classes defined in grad_cam.py
+                2. Run forward() with images
+                3. Run backward() with a list of specific classes
+                4. Run generate() to export results
+                """
 
-            # =========================================================================
-            print("Grad-CAM/Guided Backpropagation/Guided Grad-CAM:")
+                # =========================================================================
+                # print("Vanilla Backpropagation:")
 
-            _ = gcam.forward(images)
+                try:
+                    probs, ids = bp.forward(image)  # sorted
+                except:
+                    continue
 
-            _ = gbp.forward(images)
+                # =========================================================================
+                print("Grad-CAM/Guided Backpropagation/Guided Grad-CAM:")
 
-            for i in range(topk):
-                # Guided Backpropagation
-                gbp.backward(ids=ids[:, [i]])
-                gradients = gbp.generate()
+                _ = gcam.forward(image)
 
-                # Grad-CAM
-                gcam.backward(ids=ids[:, [i]])
-                regions = gcam.generate(target_layer=target_layer)
+                _ = gbp.forward(image)
 
-                for j in range(len(images)):
+                for i in range(topk):
+                    j = 0
+                    # Guided Backpropagation
+                    gbp.backward(ids=ids[:, [i]])
+                    gradients = gbp.generate()
+
+                    # Grad-CAM
+                    gcam.backward(ids=ids[:, [i]])
+                    regions = gcam.generate(target_layer=target_layer)
+
                     print("\t#{}: {} ({:.5f})".format(j, classes[ids[j, i]], probs[j, i]))
 
                     # Guided Backpropagation
@@ -617,32 +631,31 @@ def demo4(image_paths, target_layer, arch, topk, model_path, input_size, num_cla
                     os.makedirs(tmp_output_dir, exist_ok=True)
                     grad_cam_path = osp.join(
                         tmp_output_dir,
-                        "{}-{}-{}-{}-gradcam-{}-{}.png".format(
-                            image_file_names[j], image_idx, j, arch, target_layer, classes[ids[j, i]]
+                        "{}-{}-gradcam-{}-{}.png".format(
+                            os.path.splitext(os.path.basename(image_path))[0], arch, target_layer, classes[ids[j, i]]
                         ))
 
                     # Grad-CAM
                     save_gradcam(
                         filename=grad_cam_path,
                         gcam=regions[j, 0],
-                        raw_image=raw_images[j],
+                        raw_image=raw_image,
                     )
 
                     grad_cam_bbox_path = osp.join(
                         tmp_output_dir,
-                        "{}-{}-{}-{}-gradcam_bbox-{}-{}.png".format(
-                            image_file_names[j], image_idx, j, arch, target_layer, classes[ids[j, i]]
+                        "{}-gradcam_bbox-{}-{}.png".format(
+                            arch, target_layer, classes[ids[j, i]]
                         ))
                     gcam_bbox_ret = save_gcam_bboxes(filename=grad_cam_bbox_path,
                                                      gcam=regions[j, 0],
-                                                     raw_image=raw_images[j],
+                                                     raw_image=raw_image,
                                                      bitmap_threshold=bitmap_threshold, bbox_threshold=bbox_threshold)
 
                     guided_grad_cam_path = osp.join(
                         tmp_output_dir,
-                        "{}-{}-{}-{}-guided_gradcam-{}-{}.png".format(
-                            image_file_names[j], image_idx, j, arch, target_layer, classes[ids[j, i]]
-                        ))
+                        "{}-guided_gradcam-{}-{}.png".format(arch, target_layer, classes[ids[j, i]]
+                                                             ))
                     # Guided Grad-CAM
                     save_gradient(
                         filename=guided_grad_cam_path,
@@ -654,10 +667,10 @@ def demo4(image_paths, target_layer, arch, topk, model_path, input_size, num_cla
                     if gcam_bbox_ret:
                         grad_cam_bbox_im = Image.open(grad_cam_bbox_path).convert("RGB")
 
-                        im_h = cv2.hconcat([raw_images[j], np.array(grad_cam_im), np.array(guided_grad_cam_im),
+                        im_h = cv2.hconcat([raw_image, np.array(grad_cam_im), np.array(guided_grad_cam_im),
                                             np.array(grad_cam_bbox_im)])
                     else:
-                        im_h = cv2.hconcat([raw_images[j], np.array(grad_cam_im), np.array(guided_grad_cam_im)])
+                        im_h = cv2.hconcat([raw_image, np.array(grad_cam_im), np.array(guided_grad_cam_im)])
                     concat_im = Image.fromarray(im_h)
                     concat_w, concat_h = concat_im.size
                     bg_im = Image.new("RGBA", (concat_w, concat_h + 80), (0, 0, 0, 255))
@@ -665,18 +678,16 @@ def demo4(image_paths, target_layer, arch, topk, model_path, input_size, num_cla
                     d = ImageDraw.Draw(bg_im)
                     d.text((5, 1), "pred: {}".format(classes[ids[j, i]]),
                            fill='white')
-                    bg_im.save(os.path.join(tmp_output_dir, "{}-{}-{}-{}-pred_{}.png".format(
-                        image_file_names[j], image_idx, j, arch, classes[ids[j, i]]
-                    )), format="png")
+                    bg_im.save(os.path.join(tmp_output_dir, "{}-pred_{}.png".format(arch, classes[ids[j, i]]
+                                                                                    )), format="png")
                     os.unlink(grad_cam_path)
                     os.unlink(guided_grad_cam_path)
                     if gcam_bbox_ret:
                         os.unlink(grad_cam_bbox_path)
                     # cv2.imwrite(output_dir + list_name[i], im_h)
 
-            del images
-            del probs
-            del ids
+                del probs
+                del ids
 
 
 @main.command()
