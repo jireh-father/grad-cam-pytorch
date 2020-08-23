@@ -514,6 +514,174 @@ def demo1(image_paths, target_layer, arch, topk, model_path, input_size, num_cla
 
 
 @main.command()
+@click.option("-i", "--image-paths", type=str, required=True)
+@click.option("-a", "--arch", type=str, required=True)
+@click.option("-t", "--target-layer", type=str, required=True)
+@click.option("-k", "--topk", type=int, default=3)
+@click.option("-m", "--model_path", type=str, default=None)
+@click.option("-s", "--input_size", type=int, default=560)
+@click.option("-n", "--num_classes", type=int, default=3)
+@click.option("-b", "--batch_size", type=int, default=10)
+@click.option("-u", "--use_crop", type=bool, default=True)
+@click.option("-o", "--output-dir", type=str, default="./results")
+@click.option("--cuda/--cpu", default=True)
+@click.option("--bbox_threshold", type=float, default=0.7)
+@click.option("--bitmap_threshold", type=float, default=0.4)
+def demo4(image_paths, target_layer, arch, topk, model_path, input_size, num_classes, batch_size,
+          use_crop, output_dir, cuda, bitmap_threshold, bbox_threshold):
+    """
+    Visualize model responses given multiple images
+    """
+    os.makedirs(output_dir, exist_ok=True)
+
+    device = get_device(cuda)
+
+    # Synset words
+    # classes = get_classtable()
+    classes = [str(i) for i in range(num_classes)]
+    # Model from torchvision
+
+    if arch.startswith("efficientnet"):
+        # efficientnet-b1 > MemoryEfficientSwish-391
+        model = EfficientNet.from_pretrained(arch, num_classes=num_classes)
+    elif arch == "rexnet":
+        model = rexnet.ReXNetV1(width_mult=1.3, classes=num_classes)
+    elif arch == "bagnet":
+        model = bagnets.pytorchnet.bagnet17(pretrained=False, num_classes=num_classes)
+    else:
+        model = models.__dict__[arch](pretrained=False, num_classes=num_classes)
+
+    if model_path:
+        model, _, _, _ = load_checkpoint(model_path, model)
+    model.to(device)
+    model.eval()
+
+    # Images
+    image_path_list = image_paths.split(",")
+    real_labels = classes
+    gcam = GradCAM(model=model)
+    gbp = GuidedBackPropagation(model=model)
+    bp = BackPropagation(model=model)
+    for path_idx, image_paths in enumerate(image_path_list):
+        image_paths = glob.glob(os.path.join(image_paths, "*"))
+        image_paths_list = chunks(image_paths, batch_size)
+        # deconv = Deconvnet(model=model)
+        for image_idx, image_paths in enumerate(image_paths_list):
+            images, raw_images = load_images(image_paths, input_size, use_crop)
+            image_file_names = [os.path.splitext(os.path.basename(fn))[0] for fn in image_paths]
+            images = torch.stack(images).to(device)
+
+            """
+            Common usage:
+            1. Wrap your model with visualization classes defined in grad_cam.py
+            2. Run forward() with images
+            3. Run backward() with a list of specific classes
+            4. Run generate() to export results
+            """
+
+            # =========================================================================
+            # print("Vanilla Backpropagation:")
+
+            try:
+                probs, ids = bp.forward(images)  # sorted
+            except:
+                continue
+
+            # =========================================================================
+            print("Grad-CAM/Guided Backpropagation/Guided Grad-CAM:")
+
+            _ = gcam.forward(images)
+
+            _ = gbp.forward(images)
+
+            for i in range(topk):
+                # Guided Backpropagation
+                gbp.backward(ids=ids[:, [i]])
+                gradients = gbp.generate()
+
+                # Grad-CAM
+                gcam.backward(ids=ids[:, [i]])
+                regions = gcam.generate(target_layer=target_layer)
+
+                for j in range(len(images)):
+                    print("\t#{}: {} ({:.5f})".format(j, classes[ids[j, i]], probs[j, i]))
+
+                    # Guided Backpropagation
+                    # save_gradient(
+                    #     filename=osp.join(
+                    #         output_dir,
+                    #         "{}-{}={}-{}-guided-{}.png".format(image_file_names[j], image_idx, j, arch, classes[ids[j, i]]),
+                    #     ),
+                    #     gradient=gradients[j],
+                    # )
+                    tmp_output_dir = os.path.join(output_dir, "label_{}-pred_{}".format(
+                        real_labels[path_idx], classes[ids[j, i]]))
+                    os.makedirs(tmp_output_dir, exist_ok=True)
+                    grad_cam_path = osp.join(
+                        tmp_output_dir,
+                        "{}-{}-{}-{}-gradcam-{}-{}.png".format(
+                            image_file_names[j], image_idx, j, arch, target_layer, classes[ids[j, i]]
+                        ))
+
+                    # Grad-CAM
+                    save_gradcam(
+                        filename=grad_cam_path,
+                        gcam=regions[j, 0],
+                        raw_image=raw_images[j],
+                    )
+
+                    grad_cam_bbox_path = osp.join(
+                        tmp_output_dir,
+                        "{}-{}-{}-{}-gradcam_bbox-{}-{}.png".format(
+                            image_file_names[j], image_idx, j, arch, target_layer, classes[ids[j, i]]
+                        ))
+                    gcam_bbox_ret = save_gcam_bboxes(filename=grad_cam_bbox_path,
+                                                     gcam=regions[j, 0],
+                                                     raw_image=raw_images[j],
+                                                     bitmap_threshold=bitmap_threshold, bbox_threshold=bbox_threshold)
+
+                    guided_grad_cam_path = osp.join(
+                        tmp_output_dir,
+                        "{}-{}-{}-{}-guided_gradcam-{}-{}.png".format(
+                            image_file_names[j], image_idx, j, arch, target_layer, classes[ids[j, i]]
+                        ))
+                    # Guided Grad-CAM
+                    save_gradient(
+                        filename=guided_grad_cam_path,
+                        gradient=torch.mul(regions, gradients)[j],
+                    )
+
+                    grad_cam_im = Image.open(grad_cam_path)
+                    guided_grad_cam_im = Image.open(guided_grad_cam_path)
+                    if gcam_bbox_ret:
+                        grad_cam_bbox_im = Image.open(grad_cam_bbox_path).convert("RGB")
+
+                        im_h = cv2.hconcat([raw_images[j], np.array(grad_cam_im), np.array(guided_grad_cam_im),
+                                            np.array(grad_cam_bbox_im)])
+                    else:
+                        im_h = cv2.hconcat([raw_images[j], np.array(grad_cam_im), np.array(guided_grad_cam_im)])
+                    concat_im = Image.fromarray(im_h)
+                    concat_w, concat_h = concat_im.size
+                    bg_im = Image.new("RGBA", (concat_w, concat_h + 80), (0, 0, 0, 255))
+                    bg_im.paste(concat_im, (0, 80))
+                    d = ImageDraw.Draw(bg_im)
+                    d.text((5, 1), "label: {}, pred: {}".format(real_labels[path_idx], classes[ids[j, i]]),
+                           fill='white')
+                    bg_im.save(os.path.join(tmp_output_dir, "{}-{}-{}-{}-label_{}-pred_{}.png".format(
+                        image_file_names[j], image_idx, j, arch, real_labels[path_idx], classes[ids[j, i]]
+                    )), format="png")
+                    os.unlink(grad_cam_path)
+                    os.unlink(guided_grad_cam_path)
+                    if gcam_bbox_ret:
+                        os.unlink(grad_cam_bbox_path)
+                    # cv2.imwrite(output_dir + list_name[i], im_h)
+
+            del images
+            del probs
+            del ids
+
+
+@main.command()
 @click.option("-i", "--image-paths", type=str, multiple=True, required=True)
 @click.option("-o", "--output-dir", type=str, default="./results")
 @click.option("--cuda/--cpu", default=True)
