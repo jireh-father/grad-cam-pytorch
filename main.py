@@ -75,15 +75,12 @@ def get_classtable():
 def preprocess(image_path, input_size, use_crop, use_center_crop=False, center_crop_ratio=0.9, use_gray=False):
     if use_crop:
         resize = [al.Resize(int(input_size * 1.1), int(input_size * 1.1)),
-                  al.CenterCrop(height=input_size, width=input_size),
-                  al.ToGray(p=1. if use_gray else 0.)]
+                  al.CenterCrop(height=input_size, width=input_size)]
     elif use_center_crop:
         resize = [al.Resize(int(input_size * (2. - center_crop_ratio)), int(input_size * (2. - center_crop_ratio))),
-                  al.CenterCrop(input_size, input_size),
-                  al.ToGray(p=1. if use_gray else 0.)]
+                  al.CenterCrop(input_size, input_size)]
     else:
-        resize = [al.Resize(input_size, input_size),
-                  al.ToGray(p=1. if use_gray else 0.)]
+        resize = [al.Resize(input_size, input_size)]
     resize_transform = al.Compose(resize)
 
     preprocess_fn = al.Compose([
@@ -94,8 +91,12 @@ def preprocess(image_path, input_size, use_crop, use_center_crop=False, center_c
     im = Image.open(image_path).convert("RGB")
     raw_image = np.array(im)
     resized_raw_image = resize_transform(image=raw_image)['image']
-    Image.fromarray(resized_raw_image, mode='RGB').save("test.jpg")
-    image = preprocess_fn(image=resized_raw_image)['image']
+
+    if use_gray:
+        image = al.Compose([al.ToGray(p=1)])(resized_raw_image)
+    else:
+        image = resized_raw_image
+    image = preprocess_fn(image=image)['image']
     # raw_image = cv2.imread(image_path)
     # raw_image = cv2.resize(raw_image, (input_size,) * 2)
     # image = transforms.Compose(
