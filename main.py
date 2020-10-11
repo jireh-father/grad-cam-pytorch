@@ -333,6 +333,9 @@ def demo1(image_paths, target_layer, arch, topk, model_path, input_size, num_cla
     """
     Visualize model responses given multiple images
     """
+    print(image_paths, target_layer, arch, topk, model_path, input_size, num_classes, batch_size,
+          use_crop, output_dir, classes_json, image_path_labels, use_center_crop, center_crop_ratio, cuda,
+          bitmap_threshold, bbox_threshold)
     os.makedirs(output_dir, exist_ok=True)
 
     device = get_device(cuda)
