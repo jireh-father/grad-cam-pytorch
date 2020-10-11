@@ -49,14 +49,14 @@ def get_device(cuda):
     return device
 
 
-def load_images(image_paths, input_size, use_crop, use_center_crop=False, center_crop_ratio=0.9):
+def load_images(image_paths, input_size, use_crop, use_center_crop=False, center_crop_ratio=0.9, use_gray=False):
     images = []
     raw_images = []
     print("Images:")
     for i, image_path in enumerate(image_paths):
         print("\t#{}: {}".format(i, image_path))
         image, raw_image = preprocess(image_path, input_size, use_crop, use_center_crop=use_center_crop,
-                                      center_crop_ratio=center_crop_ratio)
+                                      center_crop_ratio=center_crop_ratio, use_gray=use_gray)
         images.append(image)
         raw_images.append(raw_image)
     return images, raw_images
@@ -72,15 +72,18 @@ def get_classtable():
     return classes
 
 
-def preprocess(image_path, input_size, use_crop, use_center_crop=False, center_crop_ratio=0.9):
+def preprocess(image_path, input_size, use_crop, use_center_crop=False, center_crop_ratio=0.9, use_gray=False):
     if use_crop:
         resize = [al.Resize(int(input_size * 1.1), int(input_size * 1.1)),
-                  al.CenterCrop(height=input_size, width=input_size)]
+                  al.CenterCrop(height=input_size, width=input_size),
+                  al.ToGray(p=1. if use_gray else 0.)]
     elif use_center_crop:
         resize = [al.Resize(int(input_size * (2. - center_crop_ratio)), int(input_size * (2. - center_crop_ratio))),
-                  al.CenterCrop(input_size, input_size)]
+                  al.CenterCrop(input_size, input_size),
+                  al.ToGray(p=1. if use_gray else 0.)]
     else:
-        resize = [al.Resize(input_size, input_size)]
+        resize = [al.Resize(input_size, input_size),
+                  al.ToGray(p=1. if use_gray else 0.)]
     resize_transform = al.Compose(resize)
 
     preprocess_fn = al.Compose([
@@ -325,11 +328,12 @@ def main(ctx):
 @click.option("-z", "--image-path-labels", type=str, required=True)
 @click.option("-d", "--use_center_crop", type=bool, default=False)
 @click.option("-e", "--center_crop_ratio", type=float, default=0.9)
+@click.option("-d", "--use_gray", type=bool, default=False)
 @click.option("--cuda/--cpu", default=True)
 @click.option("--bbox_threshold", type=float, default=0.7)
 @click.option("--bitmap_threshold", type=float, default=0.4)
 def demo1(image_paths, target_layer, arch, topk, model_path, input_size, num_classes, batch_size,
-          use_crop, output_dir, classes_json, image_path_labels, use_center_crop, center_crop_ratio, cuda,
+          use_crop, output_dir, classes_json, image_path_labels, use_center_crop, center_crop_ratio, use_gray, cuda,
           bitmap_threshold, bbox_threshold):
     """
     Visualize model responses given multiple images
@@ -373,7 +377,7 @@ def demo1(image_paths, target_layer, arch, topk, model_path, input_size, num_cla
         # deconv = Deconvnet(model=model)
         for image_idx, image_paths in enumerate(image_paths_list):
             images, raw_images = load_images(image_paths, input_size, use_crop, use_center_crop=use_center_crop,
-                                             center_crop_ratio=center_crop_ratio)
+                                             center_crop_ratio=center_crop_ratio, use_gray=use_gray)
             image_file_names = [os.path.splitext(os.path.basename(fn))[0] for fn in image_paths]
             images = torch.stack(images).to(device)
 
