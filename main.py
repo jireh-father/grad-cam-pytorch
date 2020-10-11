@@ -328,7 +328,7 @@ def main(ctx):
 @click.option("-z", "--image-path-labels", type=str, required=True)
 @click.option("-d", "--use_center_crop", type=bool, default=False)
 @click.option("-e", "--center_crop_ratio", type=float, default=0.9)
-@click.option("-d", "--use_gray", type=bool, default=False)
+@click.option("-f", "--use_gray", type=bool, default=False)
 @click.option("--cuda/--cpu", default=True)
 @click.option("--bbox_threshold", type=float, default=0.7)
 @click.option("--bitmap_threshold", type=float, default=0.4)
