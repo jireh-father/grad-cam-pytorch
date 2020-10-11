@@ -81,23 +81,26 @@ def preprocess(image_path, input_size, use_crop, use_center_crop=False, center_c
                   al.CenterCrop(input_size, input_size)]
     else:
         resize = [al.Resize(input_size, input_size)]
-    transform = al.Compose(resize + [
+    resize_transform = al.Compose([resize])
+
+    preprocess_fn = al.Compose([
         al.Normalize(),
         ToTensorV2()
     ])
 
     im = Image.open(image_path).convert("RGB")
     raw_image = np.array(im)
-    image = transform(image=raw_image)['image']
+    resized_raw_image = resize_transform(image=raw_image)['image']
+    image = preprocess_fn(image=resized_raw_image)['image']
     # raw_image = cv2.imread(image_path)
-    raw_image = cv2.resize(raw_image, (input_size,) * 2)
+    # raw_image = cv2.resize(raw_image, (input_size,) * 2)
     # image = transforms.Compose(
     #     [
     #         transforms.ToTensor(),
     #         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
     #     ]
     # )(raw_image[..., ::-1].copy())
-    return image, raw_image
+    return image, resized_raw_image
 
 
 def save_gradient(filename, gradient):
@@ -325,7 +328,8 @@ def main(ctx):
 @click.option("--bbox_threshold", type=float, default=0.7)
 @click.option("--bitmap_threshold", type=float, default=0.4)
 def demo1(image_paths, target_layer, arch, topk, model_path, input_size, num_classes, batch_size,
-          use_crop, output_dir, classes_json, image_path_labels, use_center_crop, center_crop_ratio, cuda, bitmap_threshold, bbox_threshold):
+          use_crop, output_dir, classes_json, image_path_labels, use_center_crop, center_crop_ratio, cuda,
+          bitmap_threshold, bbox_threshold):
     """
     Visualize model responses given multiple images
     """
