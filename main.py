@@ -93,7 +93,7 @@ def preprocess(image_path, input_size, use_crop, use_center_crop=False, center_c
     resized_raw_image = resize_transform(image=raw_image)['image']
 
     if use_gray:
-        image = al.Compose([al.ToGray(p=1.)])(resized_raw_image)
+        image = al.Compose([al.ToGray(p=1.)])(image=resized_raw_image)['image']
     else:
         image = resized_raw_image
     image = preprocess_fn(image=image)['image']
