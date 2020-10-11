@@ -325,7 +325,7 @@ def main(ctx):
 @click.option("--bbox_threshold", type=float, default=0.7)
 @click.option("--bitmap_threshold", type=float, default=0.4)
 def demo1(image_paths, target_layer, arch, topk, model_path, input_size, num_classes, batch_size,
-          use_crop, output_dir, classes_json, image_path_labels, cuda, bitmap_threshold, bbox_threshold):
+          use_crop, output_dir, classes_json, image_path_labels, use_center_crop, center_crop_ratio, cuda, bitmap_threshold, bbox_threshold):
     """
     Visualize model responses given multiple images
     """
