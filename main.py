@@ -81,7 +81,7 @@ def preprocess(image_path, input_size, use_crop, use_center_crop=False, center_c
                   al.CenterCrop(input_size, input_size)]
     else:
         resize = [al.Resize(input_size, input_size)]
-    resize_transform = al.Compose([resize])
+    resize_transform = al.Compose(resize)
 
     preprocess_fn = al.Compose([
         al.Normalize(),
