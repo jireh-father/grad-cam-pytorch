@@ -91,6 +91,7 @@ def preprocess(image_path, input_size, use_crop, use_center_crop=False, center_c
     im = Image.open(image_path).convert("RGB")
     raw_image = np.array(im)
     resized_raw_image = resize_transform(image=raw_image)['image']
+    Image.fromarray(resized_raw_image, mode='RGB').save("test.jpg")
     image = preprocess_fn(image=resized_raw_image)['image']
     # raw_image = cv2.imread(image_path)
     # raw_image = cv2.resize(raw_image, (input_size,) * 2)
