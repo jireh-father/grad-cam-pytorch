@@ -49,13 +49,14 @@ def get_device(cuda):
     return device
 
 
-def load_images(image_paths, input_size, use_crop):
+def load_images(image_paths, input_size, use_crop, use_center_crop=False, center_crop_ratio=0.9):
     images = []
     raw_images = []
     print("Images:")
     for i, image_path in enumerate(image_paths):
         print("\t#{}: {}".format(i, image_path))
-        image, raw_image = preprocess(image_path, input_size, use_crop)
+        image, raw_image = preprocess(image_path, input_size, use_crop, use_center_crop=use_center_crop,
+                                      center_crop_ratio=center_crop_ratio)
         images.append(image)
         raw_images.append(raw_image)
     return images, raw_images
@@ -71,10 +72,13 @@ def get_classtable():
     return classes
 
 
-def preprocess(image_path, input_size, use_crop):
+def preprocess(image_path, input_size, use_crop, use_center_crop=False, center_crop_ratio=0.9):
     if use_crop:
         resize = [al.Resize(int(input_size * 1.1), int(input_size * 1.1)),
                   al.CenterCrop(height=input_size, width=input_size)]
+    elif use_center_crop:
+        resize = [al.Resize(int(input_size * (2. - center_crop_ratio)), int(input_size * (2. - center_crop_ratio))),
+                  al.CenterCrop(input_size, input_size)]
     else:
         resize = [al.Resize(input_size, input_size)]
     transform = al.Compose(resize + [
@@ -315,6 +319,8 @@ def main(ctx):
 @click.option("-o", "--output-dir", type=str, default="./results")
 @click.option("-c", "--classes_json", type=str, default='["normal", "warning", "disease"]')
 @click.option("-z", "--image-path-labels", type=str, required=True)
+@click.option("-u", "--use_center_crop", type=bool, default=False)
+@click.option("-u", "--center_crop_ratio", type=float, default=0.9)
 @click.option("--cuda/--cpu", default=True)
 @click.option("--bbox_threshold", type=float, default=0.7)
 @click.option("--bitmap_threshold", type=float, default=0.4)
@@ -358,7 +364,8 @@ def demo1(image_paths, target_layer, arch, topk, model_path, input_size, num_cla
         image_paths_list = chunks(image_paths, batch_size)
         # deconv = Deconvnet(model=model)
         for image_idx, image_paths in enumerate(image_paths_list):
-            images, raw_images = load_images(image_paths, input_size, use_crop)
+            images, raw_images = load_images(image_paths, input_size, use_crop, use_center_crop=use_center_crop,
+                                             center_crop_ratio=center_crop_ratio)
             image_file_names = [os.path.splitext(os.path.basename(fn))[0] for fn in image_paths]
             images = torch.stack(images).to(device)
 
